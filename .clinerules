@@ -1,0 +1,44 @@
+# Project Rules: StudyMed (Mentor-Student App)
+
+## 1. Project Overview & Philosophy
+- **Name:** StudyMed.
+- **Purpose:** Overcoming procrastination and improving self-discipline via "Self-Distancing".
+- **Concept:** One user, two identities:
+    - **Mentor (Planner):** Manages tasks, defines deadlines, grades evaluations (Read/Write access).
+    - **Student (Doer):** Executes tasks, checks completion, views evaluations (Read-only/Complete access only).
+
+## 2. Tech Stack
+- **Backend:** Node.js, Express.js, MongoDB (Mongoose), dotenv.
+- **Frontend:** React.js (Vite), React Router, React Context API, Axios, react-responsive.
+
+## 3. Authorization & Security (Critical)
+- **NO Authentication (No Login):** Optimized for personal use.
+- **Header-based Authorization:** The client MUST include `x-role: 'mentor' | 'student'` in request headers.
+- **Middleware:** `server/middlewares/roleCheck.js` (`requireMentor`) blocks `POST`/`PUT`/`DELETE` for non-mentor roles.
+- **Client Interceptor:** `client/src/api/axiosClient.js` automatically injects the `x-role` header from `localStorage`.
+
+## 4. Frontend Architecture
+- **State Management:** `RoleContext` manages the current persona. Updates `localStorage` to persist role.
+- **Responsive Design:** 
+    - Desktop: `DesktopLayout.jsx` (Dashboard view).
+    - Mobile: `MobileLayout.jsx` (Minimalist card view).
+- **Navigation:** Controlled by `App.jsx` based on context state.
+
+## 5. API Endpoints
+- **Tasks (`/api/tasks`):**
+    - `GET /`: List all.
+    - `PUT /:id/complete`: Finish a task (Open to all).
+    - `POST /`, `PUT /:id`, `DELETE /:id`: Mentor only (Requires `x-role: mentor`).
+- **Evaluations (`/api/evaluations`):**
+    - `GET /`: List all.
+    - `POST /`: Mentor only (Requires `x-role: mentor`).
+
+## 6. Database Schemas
+- **Task:** title (String), description (String), dueDate (Date), status (pending/completed/failed), difficulty (1-5).
+- **Evaluation:** weekStart/End (Date), mentorRating (1-5), mentorFeedback (String).
+
+## 7. Development Guidelines
+- Always maintain the role-based separation.
+- Ensure all new features respect the read-only restriction for students.
+- Backend: .env file is mandatory for `MONGO_URI`, `PORT`, and `JWT_SECRET`.
+- Frontend: Keep Desktop/Mobile components in their respective `components/desktop` and `components/mobile` directories.
