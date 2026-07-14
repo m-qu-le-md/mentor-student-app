@@ -1,71 +1,83 @@
-// controllers/taskController.js
 const Task = require('../models/Task');
+const { awardTaskCompletion } = require('../services/gamificationService');
+const { getRecommendedTask } = require('../services/recommendationService');
 
-// 1. Lấy danh sách Task (Cả Mentor và Student đều xem được)
-// - Mentor xem tất cả để quản lý
-// - Student xem để làm việc
+const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+const editableFields = ['title', 'dueDate', 'flag', 'size', 'notes', 'resourceLinks'];
+
+const cleanPayload = (body) => Object.fromEntries(editableFields.filter((key) => body[key] !== undefined).map((key) => [key, body[key]]));
+
 const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ dueDate: 1 }); // Sắp xếp theo deadline gần nhất
+    const tasks = await Task.find({ lifecycle: 'assigned' }).sort({ dueDate: 1, createdAt: 1 });
     res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
-// 2. Tạo Task mới (CHỈ DÀNH CHO MENTOR)
+const getTask = async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, lifecycle: 'assigned' });
+    if (!task) return res.status(404).json({ message: 'Không tìm thấy Task' });
+    return res.json(task);
+  } catch (error) { return res.status(400).json({ message: error.message }); }
+};
+
+const getRecommended = async (req, res) => {
+  try { res.json(await getRecommendedTask()); }
+  catch (error) { res.status(500).json({ message: error.message }); }
+};
+
 const createTask = async (req, res) => {
   try {
-    const { title, description, dueDate, difficulty } = req.body;
-    const newTask = new Task({ title, description, dueDate, difficulty });
-    await newTask.save();
-    res.status(201).json(newTask);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+    const task = await Task.create({ ...cleanPayload(req.body), lifecycle: 'assigned', status: 'pending' });
+    res.status(201).json(task);
+  } catch (error) { res.status(400).json({ message: error.message }); }
 };
 
-// 3. Xóa Task (CHỈ DÀNH CHO MENTOR)
 const deleteTask = async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findOneAndDelete({ _id: req.params.id, lifecycle: 'assigned' });
     if (!task) return res.status(404).json({ message: 'Không tìm thấy Task' });
-    res.status(200).json({ message: 'Đã xóa Task thành công' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    return res.json({ message: 'Đã xóa Task thành công' });
+  } catch (error) { return res.status(500).json({ message: error.message }); }
 };
 
-// 4. Sửa Task - đổi tên, dời deadline (CHỈ DÀNH CHO MENTOR)
 const updateTask = async (req, res) => {
   try {
-    // Lấy các trường muốn update từ body
-    const updatedTask = await Task.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
-      { new: true, runValidators: true } // Trả về data mới và chạy validate Schema
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, lifecycle: 'assigned' }, cleanPayload(req.body),
+      { returnDocument: 'after', runValidators: true }
     );
-    if (!updatedTask) return res.status(404).json({ message: 'Không tìm thấy Task' });
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+    if (!task) return res.status(404).json({ message: 'Không tìm thấy Task' });
+    return res.json(task);
+  } catch (error) { return res.status(400).json({ message: error.message }); }
 };
 
-// 5. Đánh dấu hoàn thành Task (Dành cho CẢ HAI, đặc biệt là STUDENT)
 const completeTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const now = new Date();
+    let task = await Task.findOne({ _id: req.params.id, lifecycle: 'assigned' });
     if (!task) return res.status(404).json({ message: 'Không tìm thấy Task' });
+    if (task.status === 'failed') return res.status(409).json({ message: 'Task đã thất bại vì quá hạn nên không thể hoàn thành.' });
+    if (task.status === 'pending' && task.dueDate && now.getTime() > task.dueDate.getTime() + TWO_HOURS_MS) {
+      task.status = 'failed'; await task.save();
+      return res.status(409).json({ message: 'Task đã quá thời gian hoàn tất trễ hai giờ.' });
+    }
 
-    // Chuyển status từ pending -> completed
-    task.status = 'completed';
-    await task.save();
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    if (task.status === 'pending') {
+      task = await Task.findOneAndUpdate(
+        { _id: task._id, status: 'pending' },
+        { $set: { status: 'completed', completedAt: now } },
+        { returnDocument: 'after', runValidators: true }
+      ) || await Task.findById(task._id);
+    }
+    const reward = await awardTaskCompletion(task, task.completedAt || now);
+    if (task.xpAwarded !== reward.xpAwarded || !task.completedAt) {
+      task.xpAwarded = reward.xpAwarded; task.completedAt = task.completedAt || now; await task.save();
+    }
+    const next = await getRecommendedTask(now);
+    return res.json({ task, reward: { ...reward, repeated: !reward.created, nextTask: next.task, nextReason: next.reason } });
+  } catch (error) { return res.status(500).json({ message: error.message }); }
 };
 
-module.exports = { getTasks, createTask, deleteTask, updateTask, completeTask };
+module.exports = { getTasks, getTask, getRecommended, createTask, deleteTask, updateTask, completeTask };

@@ -1,11 +1,6 @@
-import { useMediaQuery } from 'react-responsive';
-import DesktopLayout from './pages/desktop/DesktopLayout';
-import MobileLayout from './pages/mobile/MobileLayout';
+import { AppRouter } from './app/AppRouter';
+import { AppErrorBoundary } from './app/AppErrorBoundary';
 
-function App() {
-  const isDesktop = useMediaQuery({ minWidth: 768 });
-
-  return isDesktop ? <DesktopLayout /> : <MobileLayout />;
+export default function App() {
+  return <AppErrorBoundary><AppRouter /></AppErrorBoundary>;
 }
-
-export default App;

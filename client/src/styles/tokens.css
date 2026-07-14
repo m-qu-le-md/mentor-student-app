@@ -1,0 +1,26 @@
+:root {
+  color-scheme: light;
+  --ivory: #f7f3ea;
+  --warm-white: #fffcf6;
+  --ink: #18211d;
+  --ink-soft: #53615a;
+  --forest: #164e3d;
+  --forest-deep: #0d3b2e;
+  --jade: #32b78b;
+  --jade-pale: #dff5ec;
+  --lime: #bddf62;
+  --amber: #e5a51a;
+  --amber-pale: #fff2cb;
+  --coral: #e56d5b;
+  --coral-pale: #ffe4de;
+  --line: rgba(24, 33, 29, 0.13);
+  --shadow: 0 18px 50px rgba(35, 46, 40, 0.08);
+  --font-display: 'Outfit', 'Avenir Next', sans-serif;
+  --font-ui: 'Geist', 'Segoe UI', sans-serif;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --sidebar: 240px;
+  --rail: 76px;
+  --mobile-bar: 72px;
+}

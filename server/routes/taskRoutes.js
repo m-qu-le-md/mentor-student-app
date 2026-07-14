@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { 
   getTasks, 
+  getTask,
+  getRecommended,
   createTask, 
   deleteTask, 
   updateTask, 
@@ -12,6 +14,8 @@ const { requireMentor } = require('../middlewares/roleCheck');
 
 // Mọi role đều xem được danh sách
 router.get('/', getTasks);
+router.get('/recommended', getRecommended);
+router.get('/:id', getTask);
 
 // Mọi role đều được bấm hoàn thành Task
 router.put('/:id/complete', completeTask);

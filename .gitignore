@@ -20,3 +20,12 @@ node_modules
 # Build
 dist
 build
+test-results/
+playwright-report/
+
+# Cline
+cline_doc/
+.clinerules
+
+# Codex local project knowledge
+codex_doc/

@@ -1,0 +1,16 @@
+[
+  {
+    "code": "red",
+    "label": "Cờ đỏ",
+    "description": "Quan trọng nhất, cần hoàn thành sớm nhất có thể.",
+    "color": "#dc2626",
+    "priority": 1
+  },
+  {
+    "code": "yellow",
+    "label": "Cờ vàng",
+    "description": "Ưu tiên thứ hai, cần hoàn thành trước deadline.",
+    "color": "#ca8a04",
+    "priority": 2
+  }
+]

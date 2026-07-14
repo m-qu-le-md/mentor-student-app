@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "start": "node server.js",
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "dev": "nodemon server.js",
+    "seed:project001": "node scripts/seedProject001TestData.js",
+    "reset:project001": "node scripts/resetProject001.js",
+    "reset:project001:dry": "node scripts/resetProject001.js --dry-run",
+    "verify:project001": "node scripts/verifyProject001Cutover.js",
+    "verify:project001:testdata": "node scripts/verifyProject001TestData.js"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +20,12 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.7.4"
+    "mongoose": "^9.7.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }

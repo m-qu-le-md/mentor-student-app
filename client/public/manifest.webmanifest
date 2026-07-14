@@ -1,0 +1,14 @@
+{
+  "name": "StudyMed — Project 001",
+  "short_name": "StudyMed",
+  "description": "Không gian học tập theo nhiệm vụ dành cho Student và Mentor.",
+  "start_url": "/student/today",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ea",
+  "theme_color": "#164e3d",
+  "lang": "vi",
+  "icons": [
+    { "src": "/project-001-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
